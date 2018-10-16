@@ -1,5 +1,5 @@
 gjeresia = 600
-gjatesia = 700
+gjatesia = 600
 
 _r, _g, _b, _a = 255, 255, 255, 1
 
@@ -55,13 +55,15 @@ end
 
 -- Ky eshte objekti i gjarprit, ku do te ruhen te dhenat e tij
 gjarpri = {}
-gjarpri.shpejtesia = 0.5
+gjarpri.shpejtesia = 4
 gjarpri.drejtimi = "djathtas"
 gjarpri.drejtimi_kaluar = ""
 gjarpri.ngordhur = false
 gjarpri.trupi = {
-    {x = 5.0, y = 5.0, dx = 0, dy = 0},
-    {x = 5.0, y = 5.0, dx = 0, dy = 0}
+    {x = 5.0, y = 5.0},
+    {x = 5.0, y = 5.0},
+    {x = 5.0, y = 5.0},
+    {x = 5.0, y = 5.0}
 }
 
 function gjarpri:shto_segment()
@@ -91,17 +93,21 @@ end
 
 -- Ketu eshte cikli i lojes, ku kryet e gjithe logjika.
 function love.update(dt) 
+    if gjarpri.ngordhur then
+        return
+    end
+    
     --Merr inputin 
 
-    gjarpri.drejtimi_kaluar = gjarpri.drejtimi 
+    gjarpri.drejtimi_kaluar = gjarpri.drejtimi
 
-    if love.keyboard.isDown("up") then
+    if love.keyboard.isDown("up") and gjarpri.drejtimi_kaluar~="poshte" then
         gjarpri.drejtimi = "lart"
-    elseif love.keyboard.isDown("right") then
+    elseif love.keyboard.isDown("right") and gjarpri.drejtimi_kaluar~="majtas" then
         gjarpri.drejtimi = "djathtas"
-    elseif love.keyboard.isDown("down") then
+    elseif love.keyboard.isDown("down") and gjarpri.drejtimi_kaluar~="lart" then
         gjarpri.drejtimi = "poshte"
-    elseif love.keyboard.isDown("left") then
+    elseif love.keyboard.isDown("left") and gjarpri.drejtimi_kaluar~="djathtas" then
         gjarpri.drejtimi = "majtas"
     end
 
@@ -112,9 +118,7 @@ function love.update(dt)
 
     if not gjarpri.drejtimi == gjarpri.dretimi_kaluar then
         gjarpri.trupi[1].x = math.floor(gjarpri.trupi[1].x)
-        gjarpri.trupi[1].y = math.floor(gjarpri.trupi[1].y)
-        print(gjarpri.drejtimi)
-        print(gjarpri.drejtimi_kaluar)
+        gjarpri.trupi[1].y = math.floor(gjarpri.trupi[1].y) 
     end
 
     levizja = gjarpri.shpejtesia * dt
@@ -139,25 +143,28 @@ function love.update(dt)
         return 
     end
 
-    --Leviz trupin    
-    for i=#gjarpri.trupi,2,-1 do
+    --Keput bishtin dhe dyfisho koken. Ne kete menyre imitohet levizja
+    if math.floor(x_ri) ~= math.floor(gjarpri.trupi[1].x)
+        or math.floor(y_ri) ~= math.floor(gjarpri.trupi[1].y) then
+        
+        table.remove(gjarpri.trupi, #gjarpri.trupi)
+        table.insert(gjarpri.trupi, 2, {})
          
-        gjarpri.trupi[i].x = gjarpri.trupi[i-1].x
-        gjarpri.trupi[i].y = gjarpri.trupi[i-1].y
+        gjarpri.trupi[2].x = gjarpri.trupi[1].x
+        gjarpri.trupi[2].y = gjarpri.trupi[1].y
+
     end
 
     --Tani leviz koken
     --
     gjarpri.trupi[1].x = x_ri
-    gjarpri.trupi[1].y = y_ri
+    gjarpri.trupi[1].y = y_ri 
 
-    print(gjarpri.trupi[1].x)
-    print(gjarpri.trupi[2].x)
 end
 
 -- Ketu behet vizatimi i lojes
 zhvendosja_x = 0
-zhvendosja_y = 100
+zhvendosja_y = 0
 
 kutia_gjeresia = (gjeresia - zhvendosja_x) / harta.kolona
 kutia_gjatesia = (gjatesia - zhvendosja_y) / harta.rreshta
