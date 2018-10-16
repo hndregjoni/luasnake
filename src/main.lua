@@ -60,8 +60,8 @@ gjarpri.drejtimi = "djathtas"
 gjarpri.drejtimi_kaluar = ""
 gjarpri.ngordhur = false
 gjarpri.trupi = {
-    {x = 5.0, y = 5.0},
-    {x = 5.0, y = 5.0}
+    {x = 5.0, y = 5.0, dx = 0, dy = 0},
+    {x = 5.0, y = 5.0, dx = 0, dy = 0}
 }
 
 function gjarpri:shto_segment()
@@ -71,12 +71,10 @@ function gjarpri:shto_segment()
     gjarpri.trupi[segmente + 1].y = gjarpri.trupi[segmente].y
 end
 
--- Ketu kemi mollet
-mollet = {
-    --Asnje molle tani per tani , mundemi dhe te shtojme
-    --Per shembull
-    --{x=4, y=4} , molle ne koordinaten 4 4
-    {x = 2, y = 2} 
+-- Tabela/objekti i molles
+molla = {
+    x = 2,
+    y = 2
 }
 
 -- Ketu behet konfigurimi i lojes
@@ -98,7 +96,7 @@ function love.update(dt)
     gjarpri.drejtimi_kaluar = gjarpri.drejtimi 
 
     if love.keyboard.isDown("up") then
-        gjarpri.drejtimi = "siper"
+        gjarpri.drejtimi = "lart"
     elseif love.keyboard.isDown("right") then
         gjarpri.drejtimi = "djathtas"
     elseif love.keyboard.isDown("down") then
@@ -112,24 +110,26 @@ function love.update(dt)
     --Leviz koken, dhe bej qe pjeset e tjera te ndjekin njera-tjetren
     --
 
-    if gjarpri.drejtimi != gjarpri.dretimi_kaluar then
+    if not gjarpri.drejtimi == gjarpri.dretimi_kaluar then
         gjarpri.trupi[1].x = math.floor(gjarpri.trupi[1].x)
         gjarpri.trupi[1].y = math.floor(gjarpri.trupi[1].y)
+        print(gjarpri.drejtimi)
+        print(gjarpri.drejtimi_kaluar)
     end
 
     levizja = gjarpri.shpejtesia * dt
 
     x_ri = gjarpri.trupi[1].x
-    y_ri = gjarpri.truip[1].y
+    y_ri = gjarpri.trupi[1].y
 
     if gjarpri.drejtimi == "lart" then
-        y_ri -= levizja
+        y_ri = y_ri - levizja
     elseif gjarpri.drejtimi == "djathtas" then
-        x_ri += levizja  
+        x_ri = x_ri + levizja  
     elseif gjarpri.drejtimi == "poshte" then
-        y_ri += levizja
-    elseif gjarpri.drejtmi == "majtas" then
-        x_ri -= levizja
+        y_ri = y_ri + levizja
+    elseif gjarpri.drejtimi == "majtas" then
+        x_ri = x_ri - levizja
     end 
 
     kutia = harta:me_koordinata(x_ri, y_ri)
@@ -139,12 +139,20 @@ function love.update(dt)
         return 
     end
 
-    --Tani leviz koken
+    --Leviz trupin    
+    for i=#gjarpri.trupi,2,-1 do
+         
+        gjarpri.trupi[i].x = gjarpri.trupi[i-1].x
+        gjarpri.trupi[i].y = gjarpri.trupi[i-1].y
+    end
 
+    --Tani leviz koken
+    --
     gjarpri.trupi[1].x = x_ri
     gjarpri.trupi[1].y = y_ri
 
-    
+    print(gjarpri.trupi[1].x)
+    print(gjarpri.trupi[2].x)
 end
 
 -- Ketu behet vizatimi i lojes
@@ -176,18 +184,13 @@ function love.draw()
         end
     end
 
-    -- Vizatojme mollet 
-    for i,molle in ipairs(mollet) do
-        love.graphics.setColor(255, 0, 0, 1)
-
-        --Kthejme koordinatat ne harte , ne koordinata ne ekran
+    -- Vizatojme mollen
         
-        local x, y = harta:ne_ekran(molle.x, molle.y)
+    local x, y = harta:ne_ekran(molla.x, molla.y)
 
-        love.graphics.rectangle("fill", x, y, kutia_gjeresia, kutia_gjatesia)
-
-        love.graphics.setColor(_r, _g, _b, _a)
-    end
+    love.graphics.setColor(255, 0, 0)
+    love.graphics.rectangle("fill", x, y, kutia_gjeresia, kutia_gjatesia)
+    love.graphics.setColor(_r, _g, _b, _a)
 
     --Vizatojme gjarprin
     for i,segment in ipairs(gjarpri.trupi) do
