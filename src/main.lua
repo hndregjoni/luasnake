@@ -39,7 +39,7 @@ function harta:me_koordinata(x, y)
     local x = math.floor(x)
     local y = math.floor(y)
     
-    return harta[(x - 1) * harta.rreshta + y]
+    return self[(x - 1) * self.rreshta + y]
 end
 
 function harta:ne_ekran(x, y)
@@ -55,7 +55,7 @@ end
 
 -- Ky eshte objekti i gjarprit, ku do te ruhen te dhenat e tij
 gjarpri = {}
-gjarpri.shpejtesia = 4
+gjarpri.shpejtesia = 8
 gjarpri.drejtimi = "djathtas"
 gjarpri.drejtimi_kaluar = ""
 gjarpri.ngordhur = false
@@ -69,8 +69,29 @@ gjarpri.trupi = {
 function gjarpri:shto_segment()
     segmente = #gjarpri.trupi
 
-    gjarpri.trupi[segmente + 1].x = gjarpri.trupi[segmente].x
-    gjarpri.trupi[segmente + 1].y = gjarpri.trupi[segmente].y
+    table.insert(self.trupi, {})
+
+    self.trupi[segmente + 1].x = self.trupi[segmente].x
+    self.trupi[segmente + 1].y = self.trupi[segmente].y
+end
+
+-- Gjejme nese ka segment me koordinata x dhe y
+function gjarpri:ka_koordinata(x, y)
+    for i=2,#self.trupi do 
+        local segmenti = self.trupi[i] 
+
+        if math.floor(segmenti.x) == x and math.floor(segmenti.y) == y then 
+            return i
+        end
+    end
+
+    return 0
+end
+
+--Vrasim gjarprin
+function gjarpri:ngordh()
+    self.ngordhur = true
+    print("Deka")
 end
 
 -- Tabela/objekti i molles
@@ -78,6 +99,24 @@ molla = {
     x = 2,
     y = 2
 }
+
+function molla:ripoziciono()
+    local sukses = false
+    while not sukses do
+        local x = math.random(harta.kolona)
+        local y = math.random(harta.rreshta)
+
+        kushti1 = gjarpri:ka_koordinata(x, y) == 0
+        kushti2 = harta:me_koordinata(x, y) ~= "#"
+
+        if kushti1 and kushti2 then
+            self.x = x
+            self.y = y
+
+            sukses = true
+        end
+    end
+end
 
 -- Ketu behet konfigurimi i lojes
 function love.load()
@@ -89,6 +128,8 @@ function love.load()
 
     --Fusim faren e random
     math.randomseed( os.time() )
+
+    molla:ripoziciono()
 end
 
 -- Ketu eshte cikli i lojes, ku kryet e gjithe logjika.
@@ -100,14 +141,14 @@ function love.update(dt)
     --Merr inputin 
 
     gjarpri.drejtimi_kaluar = gjarpri.drejtimi
-
-    if love.keyboard.isDown("up") and gjarpri.drejtimi_kaluar~="poshte" then
+    
+    if love.keyboard.isDown("up") then
         gjarpri.drejtimi = "lart"
-    elseif love.keyboard.isDown("right") and gjarpri.drejtimi_kaluar~="majtas" then
+    elseif love.keyboard.isDown("right") then
         gjarpri.drejtimi = "djathtas"
-    elseif love.keyboard.isDown("down") and gjarpri.drejtimi_kaluar~="lart" then
+    elseif love.keyboard.isDown("down") then
         gjarpri.drejtimi = "poshte"
-    elseif love.keyboard.isDown("left") and gjarpri.drejtimi_kaluar~="djathtas" then
+    elseif love.keyboard.isDown("left") then
         gjarpri.drejtimi = "majtas"
     end
 
@@ -116,31 +157,69 @@ function love.update(dt)
     --Leviz koken, dhe bej qe pjeset e tjera te ndjekin njera-tjetren
     --
 
-    if not gjarpri.drejtimi == gjarpri.dretimi_kaluar then
-        gjarpri.trupi[1].x = math.floor(gjarpri.trupi[1].x)
-        gjarpri.trupi[1].y = math.floor(gjarpri.trupi[1].y) 
+    -- if not gjarpri.drejtimi == gjarpri.dretimi_kaluar then
+    --     gjarpri.trupi[1].x = math.floor(gjarpri.trupi[1].x)
+    --     gjarpri.trupi[1].y = math.floor(gjarpri.trupi[1].y) 
+    -- end
+
+    local levizja = gjarpri.shpejtesia * dt
+
+    local x_ri = nil
+    local _x_ri = nil 
+    local y_ri = nil
+    local _y_ri = nil
+
+    while true do
+        
+        x_ri = gjarpri.trupi[1].x
+        _x_ri = math.floor(gjarpri.trupi[1].x)
+        y_ri = gjarpri.trupi[1].y
+        _y_ri = math.floor(gjarpri.trupi[1].y)
+        
+        if gjarpri.drejtimi == "lart" then
+            gjarpri.trupi[1].x = math.floor(gjarpri.trupi[1].x)
+            y_ri = y_ri - levizja
+            _y_ri = _y_ri - 1
+        elseif gjarpri.drejtimi == "djathtas" then
+            gjarpri.trupi[1].y = math.floor(gjarpri.trupi[1].y)
+            x_ri = x_ri + levizja  
+            _x_ri = _x_ri + 1
+        elseif gjarpri.drejtimi == "poshte" then
+            gjarpri.trupi[1].x = math.floor(gjarpri.trupi[1].x)
+            y_ri = y_ri + levizja
+            _y_ri = _y_ri + 1
+        elseif gjarpri.drejtimi == "majtas" then
+            gjarpri.trupi[1].y = math.floor(gjarpri.trupi[1].y)
+            x_ri = x_ri - levizja
+            _x_ri = _x_ri - 1
+        end 
+
+        -- I sati segment i trupit po preket nga koka, 0 nese asnje
+        local s = gjarpri:ka_koordinata(_x_ri, _y_ri)
+
+        if s == 2 then
+            gjarpri.drejtimi = gjarpri.drejtimi_kaluar
+            --print(gjarpri.drejtimi) 
+        elseif s~=0 then
+            gjarpri:ngordh() 
+            return
+        else
+            break
+        end
     end
 
-    levizja = gjarpri.shpejtesia * dt
+    print(_x_ri .. " " .. _y_ri)
 
-    x_ri = gjarpri.trupi[1].x
-    y_ri = gjarpri.trupi[1].y
-
-    if gjarpri.drejtimi == "lart" then
-        y_ri = y_ri - levizja
-    elseif gjarpri.drejtimi == "djathtas" then
-        x_ri = x_ri + levizja  
-    elseif gjarpri.drejtimi == "poshte" then
-        y_ri = y_ri + levizja
-    elseif gjarpri.drejtimi == "majtas" then
-        x_ri = x_ri - levizja
-    end 
-
-    kutia = harta:me_koordinata(x_ri, y_ri)
+    local kutia = harta:me_koordinata(_x_ri, _y_ri)
 
     if kutia == "#" then
-        gjarpri.ngordhur = true
+        gjarpri:ngordh() 
         return 
+    end
+
+    if _x_ri == molla.x and _y_ri == molla.y then
+        gjarpri:shto_segment()
+        molla:ripoziciono() 
     end
 
     --Keput bishtin dhe dyfisho koken. Ne kete menyre imitohet levizja
